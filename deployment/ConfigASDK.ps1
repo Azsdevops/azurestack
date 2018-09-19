@@ -2526,31 +2526,15 @@ elseif ((!$skipMySQL) -and ($progress[$RowIndex].Status -ne "Complete")) {
             # If this is an offline/partial online deployment, ensure you create a directory to store certs, and hold the MySQL Connector MSI.
             if ($deploymentMode -eq "Online") {
                 Set-Location "$ASDKpath\databases\MySQL"
-                Get-PSSession | Remove-PSSession
-                $mySQLsession = New-PSSession -Name InstallMySQLRP -ComputerName $Env:COMPUTERNAME -EnableNetworkAccess -Verbose
-                Invoke-Command -Session $mySQLsession -ArgumentList $asdkCreds, $vmLocalAdminCreds, $cloudAdminCreds, $ERCSip, $secureVMpwd -ScriptBlock {
-                    Get-Service BITS | Restart-Service
-                    Get-BitsTransfer | Remove-BitsTransfer
-                    Set-Location "$Using:ASDKpath\databases\MySQL"
-                    .\DeployMySQLProvider.ps1 -AzCredential $Using:asdkCreds -VMLocalCredential $Using:vmLocalAdminCreds -CloudAdminCredential $Using:cloudAdminCreds -PrivilegedEndpoint $Using:ERCSip -DefaultSSLCertificatePassword $Using:secureVMpwd -AcceptLicense
-                }
+                .\DeployMySQLProvider.ps1 -AzCredential $asdkCreds -VMLocalCredential $vmLocalAdminCreds -CloudAdminCredential $cloudAdminCreds -PrivilegedEndpoint $ERCSip -DefaultSSLCertificatePassword $secureVMpwd -AcceptLicense
             }
             elseif (($deploymentMode -eq "PartialOnline") -or ($deploymentMode -eq "Offline")) {
                 $dependencyFilePath = New-Item -ItemType Directory -Path "$ASDKpath\databases\MySQL\Dependencies" -Force | ForEach-Object { $_.FullName }
                 $MySQLMSI = Get-ChildItem -Path "$ASDKpath\databases\*" -Recurse -Include "*connector*.msi" -ErrorAction Stop | ForEach-Object { $_.FullName }
                 Copy-Item $MySQLMSI -Destination $dependencyFilePath -Force -Verbose
-                Get-PSSession | Remove-PSSession
-                $mySQLsession = New-PSSession -Name InstallMySQLRP -ComputerName $Env:COMPUTERNAME -EnableNetworkAccess -Verbose
-                Invoke-Command -Session $mySQLsession -ArgumentList $asdkCreds, $vmLocalAdminCreds, $cloudAdminCreds, $ERCSip, $secureVMpwd, $dependencyFilePath -ScriptBlock {
-                    Get-Service BITS | Restart-Service
-                    Get-BitsTransfer | Remove-BitsTransfer
-                    Set-Location "$Using:ASDKpath\databases\MySQL"
-                    .\DeployMySQLProvider.ps1 -AzCredential $Using:asdkCreds -VMLocalCredential $Using:vmLocalAdminCreds -CloudAdminCredential $Using:cloudAdminCreds -PrivilegedEndpoint $Using:ERCSip -DefaultSSLCertificatePassword $Using:secureVMpwd -DependencyFilesLocalPath $Using:dependencyFilePath -AcceptLicense
-                }
+                Set-Location "$ASDKpath\databases\MySQL"
+                .\DeployMySQLProvider.ps1 -AzCredential $asdkCreds -VMLocalCredential $vmLocalAdminCreds -CloudAdminCredential $cloudAdminCreds -PrivilegedEndpoint $ERCSip -DefaultSSLCertificatePassword $secureVMpwd -DependencyFilesLocalPath $dependencyFilePath -AcceptLicense
             }
-
-            Remove-PSSession -Name InstallMySQLRP -Confirm:$false -ErrorAction SilentlyContinue -Verbose
-            Remove-Variable -Name mySQLsession -Force -ErrorAction SilentlyContinue -Verbose
 
             <# Validate the MySQL RP Deployment based on Resource Group success and DNS Zone Updates
             # Validate RG Success first - RG exists | Contains 'something' | Contains succeeded items 
@@ -2662,15 +2646,8 @@ elseif ((!$skipMSSQL) -and ($progress[$RowIndex].Status -ne "Complete")) {
 
             # Define the additional credentials for the local virtual machine username/password and certificates password
             $vmLocalAdminCreds = New-Object System.Management.Automation.PSCredential ("sqlrpadmin", $secureVMpwd)
-            Get-PSSession | Remove-PSSession -Confirm:$false -ErrorAction SilentlyContinue
-            Get-Variable -Name SQLsession -ErrorAction SilentlyContinue | Remove-Variable -Force -ErrorAction SilentlyContinue -Verbose
-            $SQLsession = New-PSSession -Name InstallMSSQLRP -ComputerName $Env:COMPUTERNAME -EnableNetworkAccess -Verbose
-            Invoke-Command -Session $SQLsession -ArgumentList $asdkCreds, $vmLocalAdminCreds, $cloudAdminCreds, $ERCSip, $secureVMpwd -ScriptBlock {
-                Set-Location "$Using:ASDKpath\databases\SQL"
-                .\DeploySQLProvider.ps1 -AzCredential $Using:asdkCreds -VMLocalCredential $Using:vmLocalAdminCreds -CloudAdminCredential $Using:cloudAdminCreds -PrivilegedEndpoint $Using:ERCSip -DefaultSSLCertificatePassword $Using:secureVMpwd
-            }
-            Remove-PSSession -Name InstallMSSQLRP -Confirm:$false -ErrorAction SilentlyContinue -Verbose
-            Remove-Variable -Name SQLsession -Force -ErrorAction SilentlyContinue -Verbose
+            Set-Location "$ASDKpath\databases\SQL"
+            .\DeploySQLProvider.ps1 -AzCredential $asdkCreds -VMLocalCredential $vmLocalAdminCreds -CloudAdminCredential $cloudAdminCreds -PrivilegedEndpoint $ERCSip -DefaultSSLCertificatePassword $secureVMpwd
 
             # Validate the MySQL RP Deployment based on Resource Group success and DNS Zone Updates
             # Validate RG Success first - RG exists | Contains 'something' | Contains succeeded items 
