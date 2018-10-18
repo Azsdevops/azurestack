@@ -301,6 +301,29 @@ $fullLogPath = "$logPath\ConfigASDKLog$runTime.txt"
 $logStart = Start-Transcript -Path "$fullLogPath" -Append
 Write-CustomVerbose -Message $logStart
 
+<### POWERSHELL CHECK #########################################################################################################################################
+##############################################################################################################################################################
+Clear-Host
+Write-Host "This test will run to ensure that incorrect versions of the Azure Stack PowerShell module and the AzureRMProfile do not exist before deployment."
+Write-Host "Issues arise when running the ConfigASDK with either 1.5.0 and the hybrid AzureRmProfile standalone, or in combination with 1.4.0 and the old AzureRMProfile"
+Write-Host "This section will clean up if they exist"
+
+# Validate PSGallery
+
+
+
+
+# Validate AzureRMProfile
+
+
+
+# Validate AzureStackModule
+
+
+# Clean up if necessary - clean the profile, PS Modules and the folders
+
+#>
+
 ### INTERNET CONNECTION TEST #################################################################################################################################
 ##############################################################################################################################################################
 
